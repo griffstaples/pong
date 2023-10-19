@@ -1,17 +1,22 @@
 
 #include "SDL2/SDL.h"
+#include "homescreen.h"
+#include "playscreen.h"
 
 class PongGame
 {
 private:
     SDL_Window *window = nullptr;
-    enum Screen
+    SDL_Renderer *renderer = nullptr;
+    enum ScreenName
     {
-        HomeScreen,
-        PlayScreen,
-        VictoryScreen,
+        Home,
+        Play,
+        Victory,
     };
-    Screen currentScreen = HomeScreen;
+    ScreenName currentScreen = Home;
+    HomeScreen *homeScreen = nullptr;
+    PlayScreen *playScreen = nullptr;
 
 public:
     PongGame();
@@ -19,4 +24,8 @@ public:
     void handleUserInteractions();
     void handlePhysics();
     void renderWindow();
+    ~PongGame()
+    {
+        delete homeScreen;
+    };
 };

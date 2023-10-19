@@ -5,9 +5,15 @@
 class HomeScreen : public Screen
 {
 private:
-    Button *playButton;
+    SDL_Rect button;
+    SDL_Texture *textTexture = nullptr;
 
 public:
-    HomeScreen(SDL_Window *screenWindow);
+    HomeScreen(SDL_Window *screenWindow, SDL_Renderer *renderer);
+    ~HomeScreen()
+    {
+        SDL_DestroyTexture(textTexture);
+    }
+
     void renderScreen();
 };

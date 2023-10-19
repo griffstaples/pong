@@ -4,9 +4,9 @@ CC = clang
 SRC_FILES = $(wildcard $(SRC_DIR)/*.cpp)
 OBJ_NAME = Pong
 INCLUDE_PATHS = -I include
-LIBRARY_PATHS = -L lib/SDL2
+LIBRARY_PATHS = -L lib/SDL2 -L lib/SDL2_TTF
 COMPILER_FLAGS = -std=c++17 -Wall -O0 -g
-LINKER_FLAGS = -l c++ -l SDL2
+LINKER_FLAGS = -l c++ -l SDL2 -l SDL2_TTF
 
 all:
 	$(CC) $(COMPILER_FLAGS) $(LINKER_FLAGS) $(INCLUDE_PATHS) $(LIBRARY_PATHS) $(SRC_FILES) -o $(BUILD_DIR)/$(OBJ_NAME)
