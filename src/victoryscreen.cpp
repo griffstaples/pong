@@ -1,20 +1,22 @@
 #include <iostream>
-#include "homescreen.h"
+#include "victoryscreen.h"
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_ttf.h"
 #include <filesystem>
 #include <string>
 
-HomeScreen::HomeScreen(SDL_Window *screenWindow, SDL_Renderer *screenRenderer, ScreenName *currentScreen, bool *quitFlag) : Screen(screenWindow, screenRenderer, currentScreen, quitFlag)
+VictoryScreen::VictoryScreen(SDL_Window *screenWindow, SDL_Renderer *screenRenderer, ScreenName *currentScreen, bool *quitFlag, bool userWon) : Screen(screenWindow, screenRenderer, currentScreen, quitFlag)
 {
+    // set userWon
+    this->userWon = userWon;
 
     // Get window size
     int windowX, windowY;
     SDL_GetWindowSize(window, &windowX, &windowY);
 
     // Configure button size
-    int buttonWidth = 300; // px
-    int buttonHeight = 80; // px
+    int buttonWidth = 500; // px
+    int buttonHeight = 50; // px
     int buttonTopLeftX = (windowX - buttonWidth) / 2;
     int buttonTopLeftY = (windowY - buttonHeight) / 2;
     button = {buttonTopLeftX, buttonTopLeftY, buttonWidth, buttonHeight};
@@ -26,7 +28,7 @@ HomeScreen::HomeScreen(SDL_Window *screenWindow, SDL_Renderer *screenRenderer, S
     }
 
     // Create button text
-    SDL_Color textColor = {0, 0, 0, 255}; // black color
+    SDL_Color textColor = {255, 255, 255, 255}; // black color
     std::string workspaceDir = std::__fs::filesystem::current_path();
     std::string fontDir = workspaceDir + "/resources/Aldrich-Regular.ttf";
     TTF_Font *font = TTF_OpenFont(fontDir.c_str(), 28);
@@ -37,8 +39,15 @@ HomeScreen::HomeScreen(SDL_Window *screenWindow, SDL_Renderer *screenRenderer, S
     }
     else
     {
-
-        SDL_Surface *textSurface = TTF_RenderText_Solid(font, "Press Enter to Play", textColor);
+        SDL_Surface *textSurface;
+        if (userWon)
+        {
+            textSurface = TTF_RenderText_Solid(font, "You won! Congratulations.", textColor);
+        }
+        else
+        {
+            textSurface = TTF_RenderText_Solid(font, "Computer won. Better luck next time!", textColor);
+        }
 
         if (textSurface == NULL)
         {
@@ -60,9 +69,9 @@ HomeScreen::HomeScreen(SDL_Window *screenWindow, SDL_Renderer *screenRenderer, S
     }
 };
 
-void HomeScreen::run()
+void VictoryScreen::run()
 {
-    while (*currentScreen == Home && !(*quitFlag))
+    while (*currentScreen == Victory && !(*quitFlag))
     {
         handleEvents();
         updateState();
@@ -70,7 +79,7 @@ void HomeScreen::run()
     }
 };
 
-void HomeScreen::handleEvents()
+void VictoryScreen::handleEvents()
 {
     while (SDL_PollEvent(&e))
     {
@@ -79,25 +88,23 @@ void HomeScreen::handleEvents()
             *quitFlag = true;
             return; // exit loop
         }
-
         if (e.type == SDL_KEYDOWN)
         {
 
             if (e.key.keysym.sym == SDLK_RETURN)
             {
-                std::cout << "Going to Play Screen" << std::endl;
-                *currentScreen = Play;
-                break;
+                std::cout << "Going to Home Screen" << std::endl;
+                *currentScreen = Home;
             }
         }
     }
 };
 
-void HomeScreen::updateState(){
+void VictoryScreen::updateState(){
     // add animation here possibly
 };
 
-void HomeScreen::renderScreen()
+void VictoryScreen::renderScreen()
 {
 
     // Render background
@@ -105,15 +112,16 @@ void HomeScreen::renderScreen()
     SDL_RenderClear(renderer); // this sets all pixels to the draw colour;
 
     // Render button background
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // white color
-    SDL_RenderFillRect(renderer, &button);
+    // SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // white color
+    // SDL_RenderFillRect(renderer, &button);
 
     // Create Text for text
     SDL_RenderCopy(renderer, textTexture, NULL, &button);
+
     SDL_RenderPresent(renderer);
 };
 
-HomeScreen::~HomeScreen()
+VictoryScreen::~VictoryScreen()
 {
     SDL_DestroyTexture(textTexture);
 }

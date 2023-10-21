@@ -10,18 +10,13 @@ PongGame::PongGame()
     }
     else
     {
-        window = SDL_CreateWindow("Pong Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 400, 300, SDL_WINDOW_SHOWN);
+        window = SDL_CreateWindow("Pong Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 600, 400, SDL_WINDOW_SHOWN);
         renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-        homeScreen = new HomeScreen(window, renderer);
-        playScreen = new PlayScreen(window, renderer);
+        currentScreen = Home;
 
         if (window == NULL)
         {
             std::cerr << "SDL_CreateWindow failed: " << SDL_GetError() << std::endl;
-        }
-        else
-        {
-            // SDL_UpdateWindowSurface(window);
         }
 
         if (renderer == NULL)
@@ -33,82 +28,29 @@ PongGame::PongGame()
 
 void PongGame::runGame()
 {
-    bool quit = false;
-    SDL_Event e;
-    while (!quit)
+    while (!quitFlag)
     {
-        while (SDL_PollEvent(&e))
-        {
-            if (e.type == SDL_QUIT)
-            {
-                quit = true;
-            }
-
-            if (e.type == SDL_KEYDOWN)
-            {
-
-                if (currentScreen == Home)
-                {
-                    if (e.key.keysym.sym == SDLK_RETURN)
-                    {
-
-                        std::cout << "Going to Play Screen" << std::endl;
-                        currentScreen = Play;
-                        delete playScreen;
-                        playScreen = new PlayScreen(window, renderer);
-                    }
-                }
-                else if (currentScreen == Play)
-                {
-                    if (e.key.keysym.sym == SDLK_DOWN)
-                    {
-                        // handle down movement
-                        playScreen->handleDownMovement();
-                    }
-                    else if (e.key.keysym.sym == SDLK_UP)
-                    {
-                        // handle up movement
-                        playScreen->handleUpMovement();
-                    }
-                }
-            }
-            else
-            {
-                if (currentScreen == Play)
-                {
-                    playScreen->handleNoMovement();
-                }
-            }
-        }
-
-        // do main program shit here
-        SDL_RenderClear(renderer);
 
         // select which window
         if (currentScreen == Home)
         {
             // run screen
-            homeScreen->renderScreen();
+            HomeScreen homeScreen = HomeScreen(window, renderer, currentScreenP, quitFlagP);
+            homeScreen.run();
         }
         else if (currentScreen == Play)
         {
             // run screen
-            int status = playScreen->runPhysics();
-            playScreen->renderScreen();
 
-            if (status == 1)
-            {
-                currentScreen = Home;
-            }
+            PlayScreen playScreen = PlayScreen(window, renderer, currentScreenP, quitFlagP);
+            userWon = playScreen.run();
         }
         else if (currentScreen == Victory)
         {
             // run screen
-            // VictorScreen->renderScreen();
+            VictoryScreen victoryScreen = VictoryScreen(window, renderer, currentScreenP, quitFlagP, userWon);
+            victoryScreen.run();
         }
-
-        // handle user interaction
-        SDL_RenderPresent(renderer);
     }
 
     // clean up window object when we close the window
@@ -116,12 +58,6 @@ void PongGame::runGame()
     SDL_DestroyWindow(window);
 }
 
-void PongGame::handleUserInteractions()
+PongGame::~PongGame()
 {
-    // read user keyboard input
-    // set user velocity based on that
-    //
 }
-
-void PongGame::handlePhysics(){};
-void PongGame::renderWindow(){};

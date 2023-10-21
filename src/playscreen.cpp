@@ -7,13 +7,13 @@
 #include <filesystem>
 #include <iostream>
 
-PlayScreen::PlayScreen(SDL_Window *window, SDL_Renderer *renderer) : Screen(window, renderer)
+PlayScreen::PlayScreen(SDL_Window *window, SDL_Renderer *renderer, ScreenName *currentScreen, bool *quitFlag) : Screen(window, renderer, currentScreen, quitFlag)
 {
-    this->window = window;
-    this->renderer = renderer;
-
+    // Get window Size
     int windowX, windowY;
     SDL_GetWindowSize(window, &windowX, &windowY);
+
+    // Create container for score
     int containerX, containerY, containerWidth, containerHeight;
     containerWidth = 200;
     containerHeight = 100;
@@ -25,6 +25,7 @@ PlayScreen::PlayScreen(SDL_Window *window, SDL_Renderer *renderer) : Screen(wind
                        containerWidth,
                        containerHeight};
 
+    // Load font for score
     if (TTF_Init() == -1)
     {
         std::cout << "Error initializing TTF " << std::endl;
@@ -41,8 +42,8 @@ PlayScreen::PlayScreen(SDL_Window *window, SDL_Renderer *renderer) : Screen(wind
     int ballRadius = 10;
     int startX = windowX / 2 - ballRadius;
     int startY = windowY / 2 - ballRadius;
-    float velocityX = 1.5;
-    float velocityY = 1.5;
+    float velocityX = 2.5;
+    float velocityY = 2.5;
 
     // initialize balls
     ball = new Ball(startX, startY, ballRadius, velocityX, velocityY);
@@ -55,23 +56,6 @@ PlayScreen::~PlayScreen()
     delete computerPaddle;
 }
 
-void PlayScreen::renderScreen()
-{
-    // render background
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
-
-    // render score on top of background
-    renderScore();
-
-    // render paddles
-    userPaddle->render(renderer);
-    computerPaddle->render(renderer);
-
-    // render ball
-    ball->render(renderer);
-};
-
 void PlayScreen::renderScore()
 {
 
@@ -82,7 +66,65 @@ void PlayScreen::renderScore()
     SDL_RenderCopy(renderer, textTexture, NULL, scoreRectangle);
 };
 
-int PlayScreen::runPhysics()
+void PlayScreen::handleDownMovement()
+{
+    userPaddle->setVelocityY(2);
+};
+
+void PlayScreen::handleUpMovement()
+{
+    userPaddle->setVelocityY(-2);
+};
+
+void PlayScreen::handleNoMovement()
+{
+    userPaddle->setVelocityY(0);
+};
+
+bool PlayScreen::run()
+{
+    SDL_FlushEvents(0, 1000);
+    bool userWon;
+    while (*currentScreen == Play && !(*quitFlag))
+    {
+        handleEvents();
+        userWon = updateState();
+        renderScreen();
+    }
+    return userWon;
+};
+
+void PlayScreen::handleEvents()
+{
+    while (SDL_PollEvent(&e))
+    {
+        if (e.type == SDL_QUIT)
+        {
+            *quitFlag = true;
+            return; // exit loop
+        }
+
+        if (e.type == SDL_KEYDOWN)
+        {
+            if (e.key.keysym.sym == SDLK_DOWN)
+            {
+                // set y velocity to be positive
+                handleDownMovement();
+            }
+            else if (e.key.keysym.sym == SDLK_UP)
+            {
+                // set y velocity to be negative
+                handleUpMovement();
+            }
+        }
+        else
+        {
+            handleNoMovement();
+        }
+    }
+};
+
+bool PlayScreen::updateState()
 {
     // run physics
     float dt = 3;
@@ -104,7 +146,6 @@ int PlayScreen::runPhysics()
     float computerPaddleX = computerPaddle->getX();
     float computerPaddleY = computerPaddle->getY();
     uint16_t computerPaddleHeight = computerPaddle->getHeight();
-    uint16_t computerPaddleWidth = 20;
     float computerPaddleVY = computerPaddle->getVelocityY();
 
     //////////////////////////////////////////////////////////
@@ -228,14 +269,10 @@ int PlayScreen::runPhysics()
         {
             // if ball touches line, reset game
             ++computerScore;
-            if (computerScore >= 5)
-            {
-                return 1;
-            }
             ball->setX(100);
             ball->setY(100);
-            ball->setVelocityX(1.5);
-            ball->setVelocityY(1.5);
+            ball->setVelocityX(2.5);
+            ball->setVelocityY(2.5);
         }
         else
         {
@@ -265,14 +302,10 @@ int PlayScreen::runPhysics()
         {
             // if ball touches line, reset game
             ++userScore;
-            if (userScore >= 5)
-            {
-                return 1;
-            }
             ball->setX(100);
             ball->setY(100);
-            ball->setVelocityX(1.5);
-            ball->setVelocityY(1.5);
+            ball->setVelocityX(2.5);
+            ball->setVelocityY(2.5);
         }
         else
         {
@@ -301,27 +334,35 @@ int PlayScreen::runPhysics()
         ball->setX(newBallX);
     }
 
-    // if collision, calculate new ball position and velocity
-    // if not, calculate new ball position
+    if (computerScore >= 5)
+    {
+        *currentScreen = Victory;
+        return false;
+    }
+    else if (userScore >= 5)
+    {
+        *currentScreen = Victory;
+        return true;
+    }
 
-    // Check for collision between ball and paddle
-    // if collision calculate new ball position and velocity
-    // if not, calculate new ball position
-
-    return 0;
+    return false;
 };
 
-void PlayScreen::handleDownMovement()
+void PlayScreen::renderScreen()
 {
-    userPaddle->setVelocityY(2);
-};
+    // render background
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
 
-void PlayScreen::handleUpMovement()
-{
-    userPaddle->setVelocityY(-2);
-};
+    // render score on top of background
+    renderScore();
 
-void PlayScreen::handleNoMovement()
-{
-    userPaddle->setVelocityY(0);
+    // render paddles
+    userPaddle->render(renderer);
+    computerPaddle->render(renderer);
+
+    // render ball
+    ball->render(renderer);
+
+    SDL_RenderPresent(renderer);
 };

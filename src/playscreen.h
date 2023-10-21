@@ -14,14 +14,17 @@ private:
     uint8_t userScore = 0;
     uint8_t computerScore = 0;
     SDL_Rect *scoreRectangle = nullptr;
+    void handleEvents();
+    bool updateState();
+    void renderScreen();
+    SDL_Event e;
 
 public:
-    PlayScreen(SDL_Window *window, SDL_Renderer *renderer);
+    PlayScreen(SDL_Window *window, SDL_Renderer *renderer, ScreenName *currentScreen, bool *quitFlag);
     ~PlayScreen();
-    void renderScreen();
     void renderScore();
-    int runPhysics();
     void handleDownMovement();
     void handleUpMovement();
     void handleNoMovement();
+    bool run();
 };

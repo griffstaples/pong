@@ -11,5 +11,7 @@ int main()
     PongGame game = PongGame();
     game.runGame();
 
+    std::cout << "Program closing" << std::endl;
+
     return 0;
 }
